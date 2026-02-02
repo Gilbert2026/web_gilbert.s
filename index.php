@@ -1,117 +1,145 @@
+<?php
+session_start(); // Memulai session untuk menyimpan histori
+
+// Logika hapus histori
+if (isset($_POST['clear_history'])) {
+    $_SESSION['history'] = [];
+}
+
+// Inisialisasi histori jika belum ada
+if (!isset($_SESSION['history'])) {
+    $_SESSION['history'] = [];
+}
+?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Kalkulator Sederhana</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .calculator {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            width: 260px;
-        }
-
-        .calculator input {
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Sederhana | UKK RPL 2025</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style type="text/css">
+        .btn {
             width: 100%;
-            height: 40px;
-            font-size: 18px;
-            margin-bottom: 10px;
-            text-align: right;
-            padding-right: 10px;
-        }
-
-        .buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-        }
-
-        button {
-            height: 40px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .operator {
-            background: #f9a825;
-            color: white;
-            border: none;
-        }
-
-        .equal {
-            background: #43a047;
-            color: white;
-            border: none;
-            grid-column: span 2;
-        }
-
-        .clear {
-            background: #e53935;
-            color: white;
-            border: none;
-            grid-column: span 2;
+            .history-box { max-height: 200px; overflow-y: auto; font-size: 0.9rem; }
         }
     </style>
 </head>
 <body>
+ <div class="container mt-5">
+   <h2 class="text-center">Kalkulator Sederhana</h2>
+   <div class="row justify-content-center">
+    <div class="col-md-4">
+        <form method="POST" class="p-2 border rounded bg-light">
+            <label class="form-label">Angka Pertama</label>
+            <input type="number" name="angka1" class="form-control" autocomplete="off"  autofocus required 
+            value="<?php echo isset($_POST['hasil']) ? $_POST['hasil'] : '' ?>">
+            <label class="form-label">Angka Kedua</label>
+            <input type="number" name="angka2" class="form-control" required>
+             <div class="d-flex justify-content-center gap-2 mt-2">
+                <button type="submit" class="btn btn-primary" name="operator"
+                value="+" title="nambah"><i class="fas fa-plus"></i></button>
+                <button type="submit" class="btn btn-secondary" name="operator"   
+                value="-" title="Kurang"><i class="fas fa-minus"></i></button>
+                <button type="submit" class="btn btn-success" name="operator"
+                value="x" title="Kali"><i class="fas fa-xmark"></i></button>
+                <button type="submit" class="btn btn-info" name="operator"
+                value="/" title="Bagi"><i class="fas fa-divide"></i></button>
+                |
+                <button type="reset" name="reset" class="btn btn-warning" value="reset" title="Hapus"><i class="fa-solid fa-eraser"></i></button>
+             </div>
+        </form>
 
-<div class="calculator">
-    <input type="text" id="display" disabled>
+         <div class=" p-2 border rounded bg-light ">
+            <h4 class="text-center">
+              <?php
+              if (isset($_POST['operator'])) {
+                 $angka1 = $_POST['angka1'];
+                 $angka2 = $_POST['angka2'];
+                 $operator = $_POST['operator'];
 
-    <div class="buttons">
-        <button onclick="append('7')">7</button>
-        <button onclick="append('8')">8</button>
-        <button onclick="append('9')">9</button>
-        <button class="operator" onclick="append('/')">/</button>
+                 if (!is_numeric($angka1) || !is_numeric($angka2)) {
+                   echo  "<script>alert('Input harus berupa angka')</script>";
+                 }elseif($operator == '/' && $angka2 == 0){
+                    echo  "<script>alert('Tidak dapat membagi dengan Nol')</script>";
+                 }else{
+                    switch ($operator) {
+                        case '+':
+                            $hasil = $angka1 + $angka2;
+                            break;
+                        case '-':
+                            $hasil = $angka1 - $angka2;
+                            break;
+                         case 'x':
+                            $hasil = $angka1 * $angka2;
+                             break;
+                         case '/':
+                            $hasil = $angka1 / $angka2;
+                             break; 
 
-        <button onclick="append('4')">4</button>
-        <button onclick="append('5')">5</button>
-        <button onclick="append('6')">6</button>
-        <button class="operator" onclick="append('*')">*</button>
+                        default:
+                            echo "operator tidak valid";
+                            break;
+                    }
+                    $format_hasil = "$angka1 $operator $angka2 = $hasil";
+                    echo $format_hasil;
+                    
+                    // Simpan ke Histori (Session)
+                    array_unshift($_SESSION['history'], $format_hasil); 
+                 }
+              }else{
+                echo "Hasil:";
+              }
+               ?>
+            </h4>
 
-        <button onclick="append('1')">1</button>
-        <button onclick="append('2')">2</button>
-        <button onclick="append('3')">3</button>
-        <button class="operator" onclick="append('-')">-</button>
 
-        <button onclick="append('0')">0</button>
-        <button onclick="append('.')">.</button>
-        <button class="equal" onclick="calculate()">=</button>
-        <button class="operator" onclick="append('+')">+</button>
+            <div class="row">
+                <div class="col-6">
+                    <?php if(!empty($hasil)) : ?>
+                        <form method="POST">                         
+                             <input type="hidden" name="hasil" value="<?php echo $hasil ?>">
+                        <button type="submit" class="btn btn-primary" title="Memory Entry">HAPUS</button>
+                    </form>
+                    <?php endif; ?>
+                    </div>
+                <div class="col-6">
+                    <?php if(isset($hasil) && $hasil !== null) : ?>
+                        <form method="POST">
+                <button type="submit" name="resethasil" class="btn btn-danger" title="Memory Entry">HASIL</button>
+                    </form>
+                    <?php endif; ?>
+                     </div>
+            </div>
+        </div>
 
-        <button class="clear" onclick="clearDisplay()">C</button>
+        <div class="p-3 border rounded bg-white shadow-sm mt-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0"><i class="fa-solid fa-history me-2"></i>Histori perhitungan</h6>
+                <form method="POST">
+                    <button type="submit" name="clear_history" class="btn btn-link btn-sm text-danger p-0 text-decoration-none">Hapus Semua</button>
+                </form>
+            </div>
+            <hr class="mt-1">
+            <div class="history-box">
+                <?php if (empty($_SESSION['history'])): ?>
+                    <p class="text-muted text-center small">Belum ada riwayat.</p>
+                <?php else: ?>
+                    <ul class="list-group list-group-flush">
+                        <?php foreach ($_SESSION['history'] as $item): ?>
+                            <li class="list-group-item p-1 border-0 small">• <?php echo $item; ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>     
+            </div>
+        </div>
     </div>
-</div>
+   </div>
+ </div>
 
-<script>
-    const display = document.getElementById("display");
+ <p class="text-center">&copy; UKK RPL 2025 |  GILBERT SAMUEL  XI RPL 1</p>
 
-    function append(value) {
-        display.value += value;
-    }
-
-    function clearDisplay() {
-        display.value = "";
-    }
-
-    function calculate() {
-        try {
-            display.value = eval(display.value);
-        } catch (error) {
-            display.value = "Error";
-        }
-    }
-</script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
 </body>
 </html>
